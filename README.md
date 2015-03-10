@@ -12,6 +12,6 @@ Licensed under the MIT license, see [License.txt](https://github.com/urho3d/Urho
 
 
 ##My Urho3D Samples
-![Sample1](https://raw.githubusercontent.com/scorvi/Urho3DSamples/tree/master/screenshots/01_AttributeInspector.png)
-![Sample2](https://raw.githubusercontent.com/scorvi/Urho3DSamples/tree/master/screenshots/02_OpenVGRenderer.png)
-![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/tree/master/screenshots/03_NanoSVGRendering.png)
+![Sample1](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/01_AttributeInspector.png)
+![Sample2](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/02_OpenVGRenderer.png)
+![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/03_NanoSVGRendering.png)
