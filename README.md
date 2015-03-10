@@ -20,7 +20,7 @@ look at NanoGUI::Render(bool resetRenderTargets /*= true*/) for the implenentaio
 
 note: it uses the nanovgs native opengl rendering pipeline 
 
-note: only NanoGUI::Render is at the moment implentet the other sunctions do nothing .... 
+note: only NanoGUI::Render is at the moment implented the other functions do nothing .... 
 
 todo: create an uhro3d rendering context for nanovg
 
