@@ -31,3 +31,13 @@ todo: create an uhro3d rendering context for nanovg
 look at Sample::CreateSVGSprite(const String& file) for the implementation
 
 ![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/03_NanoSVGRendering.png)
+
+###04_GalaxyGeneration
+
+WIP
+
+###05_HierachyWindow
+
+WIP
+
+![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/05_HierachyWindow.png)
