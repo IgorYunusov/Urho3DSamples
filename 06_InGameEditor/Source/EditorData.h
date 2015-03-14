@@ -28,6 +28,8 @@ namespace Urho3D
 	class AttributeWindowUI;
 	class AttributeInspector;
 	class FileSelector;
+	class Camera;
+
 
 	class EditorData : public Object
 	{
@@ -76,6 +78,7 @@ namespace Urho3D
 		void			SetGlobalVarNames(const String& name);
 		const Variant&	GetGlobalVarNames(StringHash& name);
 
+
 	protected:
 		/// Selection
 		Vector<Node*>		selectedNodes_;
@@ -93,6 +96,8 @@ namespace Urho3D
 
 		// Node or UIElement hash-to-varname reverse mapping
 		VariantMap globalVarNames_;
+
+		
 
 	};
 

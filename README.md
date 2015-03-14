@@ -36,8 +36,17 @@ look at Sample::CreateSVGSprite(const String& file) for the implementation
 
 WIP
 
-###05_HierachyWindow
+###05_HierarchyWindow
 
 WIP
 
-![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/05_HierachyWindow.png)
+![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/05_HierarchyWindow.png)
+
+###06_InGameEditor
+
+look at InGameEditor class
+
+added: Menu Bar, Tool Bar, InGameEditor Subsystem that can be opend with F3
+todo: select, manipulate and edit nodes
+
+![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/06_InGameEditor.png)

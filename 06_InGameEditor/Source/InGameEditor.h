@@ -5,6 +5,7 @@
 #include "../Core/Object.h"
 #include "Macros.h"
 
+
 namespace Urho3D
 {
 
@@ -18,6 +19,7 @@ namespace Urho3D
 	}
 	class Node;
 	class Component;
+	class Camera;
 
 	class Button;
 	class BorderImage;
@@ -40,6 +42,8 @@ namespace Urho3D
 	class HierarchyWindow;
 	class AttributeInspector;
 	class EditorData;
+	class EditorPlugin;
+	class Viewport;
 
 	class InGameEditor : public Object
 	{
@@ -52,12 +56,16 @@ namespace Urho3D
 		/// Register object factory.
 		static void RegisterObject(Context* context);
 
-		/// Update elements to layout properly. Call this after manually adjusting the sub-elements.
-		void UpdateElements();
 		/// Toggle visibility.
 		void Toggle();
 		/// Update Attribute Inspector manually.
 		void UpdateAttributeInspector();
+		/// Register an Editor Plugin
+		bool RegisterEditorPlugin(EditorPlugin* plugin);
+		/// set main editor plugin
+		bool SetMainEditor(const String& name);
+		bool SetMainEditor(StringHash name);
+
 
 		/// Set UI elements' style from an XML file.
 		void SetDefaultStyle(XMLFile* style);
@@ -76,8 +84,15 @@ namespace Urho3D
 		Scene* GetScene();
 		/// Return the edited scene.
 		UIElement* GetSceneUI();
-
+		/// Return the editor camera node.
+		Node* GetCameraNode();
 	protected:
+		/// Input Events Handler 
+		void HandleKeyDown(StringHash eventType, VariantMap& eventData);
+		void HandleKeyUp(StringHash eventType, VariantMap& eventData);
+		void HandleUpdate(StringHash eventType, VariantMap& eventData);
+
+
 		void HandleMenuBarAction(StringHash eventType, VariantMap& eventData);
 		void HandleHierarchyListSelectionChange(StringHash eventType, VariantMap& eventData);
 
@@ -86,25 +101,32 @@ namespace Urho3D
 		UIElement*	GetListUIElement(UIElement*  item);
 		UIElement*	GetUIElementByID(const Variant& id);
 
-		ResourceCache* cache_;
-		UI* ui_;
-		Graphics* graphics_;
+		ResourceCache*	cache_;
+		Graphics*		graphics_;
+		UI*				ui_;
 
 		SharedPtr<UIElement>	rootUI_;
 		SharedPtr<Scene>		scene_;
 		SharedPtr<UIElement>	sceneUI_;
-		SharedPtr<EditorData> editorData_;
+		SharedPtr<EditorData>	editorData_;
 
-		SharedPtr<MenuBarUI>	 menubar_;
-		SharedPtr<ToolBarUI>	 toolbar_;
-		SharedPtr<MiniToolBarUI> minitoolbar_;
-		SharedPtr<HierarchyWindow> hierarchyWindow_;
-		SharedPtr<AttributeInspector> attributeInspector_;
-		SharedPtr<XMLFile>		 defaultStyle_;
-		SharedPtr<XMLFile>		 iconStyle_;
+		SharedPtr<XMLFile>			defaultStyle_;
+		SharedPtr<XMLFile>			iconStyle_;
+		SharedPtr<MenuBarUI>		menubar_;
+		SharedPtr<ToolBarUI>		toolbar_;
+		SharedPtr<MiniToolBarUI>	minitoolbar_;
+		SharedPtr<HierarchyWindow>		hierarchyWindow_;
+		SharedPtr<AttributeInspector>	attributeInspector_;
 		
-		// Serializable Attributes
+		EditorPlugin*			mainEditorPlugin_;
+		Vector<EditorPlugin*>	activeSubEditorPlugins_;
+		Vector<EditorPlugin*>	mainEditorPlugins_;
+		Vector<SharedPtr<EditorPlugin>> allEditorPlugins_;
 
+		SharedPtr<Camera>	camera_;
+		SharedPtr<Node>		cameraNode_;
+		SharedPtr<Viewport> viewport_;
+		SharedPtr<Viewport> backupViewport_;
 	};
 
 

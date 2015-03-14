@@ -1,12 +1,16 @@
+
+#include "../Urho3D.h"
 #include "EditorPlugin.h"
+#include "InGameEditor.h"
 
 namespace Urho3D
 {
 
 
-	EditorPlugin::EditorPlugin(Context* context) : Object(context)
+	EditorPlugin::EditorPlugin(Context* context) : Object(context),
+		editor_(NULL)
 	{
-
+		editor_ = GetSubsystem<InGameEditor>();
 	}
 
 	EditorPlugin::~EditorPlugin()
@@ -16,7 +20,7 @@ namespace Urho3D
 
 	void EditorPlugin::RegisterObject(Context* context)
 	{
-		context->RegisterFactory<EditorPlugin>();
+		context->RegisterFactory<EditorPlugin>("EditorPlugin");
 	}
 
 }

@@ -31,6 +31,7 @@
 #include "HierarchyWindow.h"
 #include "AttributeInspector.h"
 #include "ResourcePicker.h"
+#include "../Graphics/Camera.h"
 
 namespace Urho3D
 {
@@ -229,5 +230,7 @@ namespace Urho3D
 	{
 		return globalVarNames_[name];
 	}
+
+
 
 }

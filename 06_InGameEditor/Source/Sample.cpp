@@ -79,6 +79,7 @@
 #include "InGameEditor.h"
 
 #include "../DebugNew.h"
+#include "InputActionSystem.h"
 
 
 
@@ -113,6 +114,9 @@ namespace Urho3D
 		HierarchyWindow::RegisterObject(context_);		
 
 		RegisterInGameEditor(context_);
+
+		InputActionSystem::RegisterObject(context_);
+		context_->RegisterSubsystem(new InputActionSystem(context_));
 	}
 
 	void Sample::Start()
@@ -267,8 +271,11 @@ namespace Urho3D
 		if (key == KEY_ESC)
 		{
 			Console* console = GetSubsystem<Console>();
+			InGameEditor* ingameedit = GetSubsystem<InGameEditor>();
 			if (console->IsVisible())
 				console->SetVisible(false);
+			else if (ingameedit  && ingameedit->IsVisible())
+				ingameedit->Toggle();
 			else
 				GetSubsystem<Engine>()->Exit();
 		}
@@ -378,6 +385,7 @@ namespace Urho3D
 		Text* instructionText = ui->GetRoot()->CreateChild<Text>();
 		instructionText->SetText(
 			"Use WASD keys and mouse to move\n"
+			"F3 to toggle the editor\n"
 			"Space to toggle debug geometry"
 			);
 		instructionText->SetFont(cache->GetResource<Font>("Fonts/Anonymous Pro.ttf"), 13);
@@ -475,6 +483,7 @@ namespace Urho3D
 	{
 		editorMode_ = false;
 		ingameEditor_->SetScene(NULL);
+		
 	}
 
 }

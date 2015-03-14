@@ -34,15 +34,17 @@
 #include "EditorData.h"
 #include "../Core/Variant.h"
 #include "UIUtils.h"
-
-
+#include "EditorPlugin.h"
+#include "PluginScene3DEditor.h"
+#include "../Graphics/Camera.h"
+#include "../Graphics/Renderer.h"
+#include "../Graphics/Viewport.h"
 
 namespace Urho3D
 {
-
-	InGameEditor::InGameEditor(Context* context) : Object(context)
+	InGameEditor::InGameEditor(Context* context) : Object(context),
+		mainEditorPlugin_(NULL)
 	{
-
 		editorData_ = new EditorData(context_);
 
 		/// ResourcePickerManager is needed for the Attribute Inspector, so don't forget to init it
@@ -50,23 +52,23 @@ namespace Urho3D
 		ResourcePickerManager* resPickerMng = GetSubsystem<ResourcePickerManager>();
 		resPickerMng->Init();
 
-		/// cache some Subsystems 
+		/// cache some Subsystems
 		cache_ = GetSubsystem<ResourceCache>();
 		ui_ = GetSubsystem<UI>();
 		graphics_ = GetSubsystem<Graphics>();
 
-		/// load default style files, can be edited afterwards 
+		/// load default style files, can be edited afterwards
 		defaultStyle_ = cache_->GetResource<XMLFile>("UI/IDEStyle.xml");
 		iconStyle_ = cache_->GetResource<XMLFile>("UI/IDEIcons.xml");
 
-		/// create main ui element 
+		/// create main ui element
 		rootUI_ = ui_->GetRoot()->CreateChild<UIElement>("InGameEditor");
 		rootUI_->SetSize(ui_->GetRoot()->GetSize());
-		rootUI_->SetTraversalMode(TM_DEPTH_FIRST);     // This is needed for root-like element to prevent artifacts		
-
+		rootUI_->SetTraversalMode(TM_DEPTH_FIRST);     // This is needed for root-like element to prevent artifacts
 		rootUI_->SetPriority(100);
 		rootUI_->SetDefaultStyle(defaultStyle_);
 		rootUI_->SetOpacity(0.65f);
+
 		//////////////////////////////////////////////////////////////////////////
 		/// create menu bar with default menu entries
 		menubar_ = MenuBarUI::Create(rootUI_, "EditorMenuBar");
@@ -82,14 +84,15 @@ namespace Urho3D
 		/// create the hierarchy editor
 		hierarchyWindow_ = rootUI_->CreateChild<HierarchyWindow>("SceneHierarchyWindow");
 		hierarchyWindow_->SetSize(200, 200);
-		hierarchyWindow_->SetDefaultStyle(defaultStyle_);
-		hierarchyWindow_->SetStyleAuto();
 		hierarchyWindow_->SetMovable(true);
 		hierarchyWindow_->SetIconStyle(iconStyle_);
 		hierarchyWindow_->SetTitle("Scene Hierarchy");
 		hierarchyWindow_->SetPosition(0, menubar_->GetHeight());
+		hierarchyWindow_->SetHeight(graphics_->GetHeight() - menubar_->GetHeight());
+		hierarchyWindow_->SetDefaultStyle(defaultStyle_);
+		hierarchyWindow_->SetStyleAuto();
 		/// \todo
-		// dont know why the auto style does not work ... 
+		// dont know why the auto style does not work ...
 		hierarchyWindow_->SetTexture(cache_->GetResource<Texture2D>("Textures/UI.png"));
 		hierarchyWindow_->SetImageRect(IntRect(48, 0, 64, 16));
 		hierarchyWindow_->SetBorder(IntRect(4, 4, 4, 4));
@@ -103,14 +106,28 @@ namespace Urho3D
 		UIElement* attrinsp = attributeInspector_->Create();
 		rootUI_->AddChild(attrinsp);
 
-		attrinsp->SetHeight(10 * ATTR_HEIGHT + 58);
+		attrinsp->SetHeight(graphics_->GetHeight() - menubar_->GetHeight());
 		attrinsp->SetWidth(ATTRNAME_WIDTH * 2);
-		attrinsp->SetPosition(200, menubar_->GetHeight());
 
-
-
+		attrinsp->SetPosition(graphics_->GetWidth() - ATTRNAME_WIDTH * 2, menubar_->GetHeight());
 
 		rootUI_->SetVisible(false);
+
+		//////////////////////////////////////////////////////////////////////////
+		/// create view
+		cameraNode_ = new Node(context_);
+		camera_ = cameraNode_->CreateComponent<Camera>();
+		camera_->SetFarClip(1300.0f);
+		// Set an initial position for the camera scene node above the plane
+		cameraNode_->SetPosition(Vector3(0.0f, 8.0f, 0.0f));
+
+		//////////////////////////////////////////////////////////////////////////
+		/// create default editor plugins
+
+		SharedPtr<PluginScene3DEditor> scene3dEditor(new PluginScene3DEditor(context_));
+
+		RegisterEditorPlugin(scene3dEditor);
+		mainEditorPlugin_ = scene3dEditor;
 	}
 
 	InGameEditor::~InGameEditor()
@@ -123,11 +140,6 @@ namespace Urho3D
 		context->RegisterFactory<InGameEditor>();
 	}
 
-	void InGameEditor::UpdateElements()
-	{
-
-	}
-
 	void InGameEditor::SetDefaultStyle(XMLFile* style)
 	{
 		if (!style)
@@ -136,8 +148,6 @@ namespace Urho3D
 			return;
 		defaultStyle_ = style;
 		rootUI_->SetDefaultStyle(style);
-
-		UpdateElements();
 	}
 
 	void InGameEditor::SetVisible(bool enable)
@@ -156,10 +166,16 @@ namespace Urho3D
 				VariantMap& newEventData = GetEventDataMap();
 				SendEvent(E_START_INGAMEEDITOR_, newEventData);
 
+				/// Subscribe input events
+				SubscribeToEvent(E_KEYDOWN, HANDLER(InGameEditor, HandleKeyDown));
+				SubscribeToEvent(E_KEYUP, HANDLER(InGameEditor, HandleKeyUp));
+				// Subscribe HandleUpdate() function for processing update events
+				SubscribeToEvent(E_UPDATE, HANDLER(InGameEditor, HandleUpdate));
+				SetMainEditor(PluginScene3DEditor::GetTypeStatic());
+	
 			}
 			else
 			{
-
 				// Restore OS mouse visibility
 				input->ResetMouseVisible();
 				ui_->SetFocusElement(NULL);
@@ -167,9 +183,17 @@ namespace Urho3D
 				using namespace QuitInGameEditor;
 				VariantMap& newEventData = GetEventDataMap();
 				SendEvent(E_QUIT_INGAMEEDITOR_, newEventData);
+
+				/// Subscribe input events
+				UnsubscribeFromEvent(E_KEYDOWN);
+				UnsubscribeFromEvent(E_KEYUP);
+				UnsubscribeFromEvent(E_UPDATE);
+				if (mainEditorPlugin_)
+				{
+					mainEditorPlugin_->Leave();
+				}
 			}
 		}
-
 	}
 
 	void InGameEditor::Toggle()
@@ -182,12 +206,57 @@ namespace Urho3D
 		if (attributeInspector_)
 			if (attributeInspector_->GetAttributewindow()->IsVisible())
 			{
-
 				attributeInspector_->GetEditNodes() = editorData_->GetEditNodes();
 				attributeInspector_->GetEditComponents() = editorData_->GetEditComponents();
 				attributeInspector_->Update();
 			}
-				
+	}
+
+	bool InGameEditor::RegisterEditorPlugin(EditorPlugin* plugin)
+	{
+		if (plugin)
+		{
+			SharedPtr<EditorPlugin> editorplugin(plugin);
+			Vector<SharedPtr<EditorPlugin>>::Iterator it = allEditorPlugins_.Find(editorplugin);
+
+			if (it == allEditorPlugins_.End())
+			{
+				allEditorPlugins_.Push(editorplugin);
+
+				if (editorplugin->HasMainFrame())
+				{
+					if (!mainEditorPlugins_.Contains(plugin))
+						mainEditorPlugins_.Push(plugin);
+				}
+
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool InGameEditor::SetMainEditor(const String& name)
+	{
+		if (name.Empty())
+			return false;
+		return SetMainEditor(name);
+	}
+
+	bool InGameEditor::SetMainEditor(StringHash name)
+	{
+		if (name == StringHash::ZERO)
+			return false;
+
+		for (int i = 0; i < mainEditorPlugins_.Size(); i++)
+		{
+			if (mainEditorPlugins_[i]->GetType() == name)
+			{
+				mainEditorPlugin_ = mainEditorPlugins_[i];
+				mainEditorPlugin_->Enter();
+				return true;
+			}
+		}
+		return false;
 	}
 
 	XMLFile* InGameEditor::GetDefaultStyle() const
@@ -208,6 +277,45 @@ namespace Urho3D
 	UIElement* InGameEditor::GetSceneUI()
 	{
 		return sceneUI_;
+	}
+
+	Node* InGameEditor::GetCameraNode()
+	{
+		if (!cameraNode_)
+		{
+			return NULL;
+		}
+		return cameraNode_;
+	}
+
+	void InGameEditor::HandleKeyDown(StringHash eventType, VariantMap& eventData)
+	{
+		using namespace KeyDown;
+
+		int key = eventData[P_KEY].GetInt();
+
+		if (mainEditorPlugin_)
+			mainEditorPlugin_->OnKeyInput(key, true);
+	}
+
+	void InGameEditor::HandleKeyUp(StringHash eventType, VariantMap& eventData)
+	{
+		using namespace KeyUp;
+
+		int key = eventData[P_KEY].GetInt();
+
+		if (mainEditorPlugin_)
+			mainEditorPlugin_->OnKeyInput(key, false);
+	}
+
+	void InGameEditor::HandleUpdate(StringHash eventType, VariantMap& eventData)
+	{
+		using namespace Update;
+		// Take the frame time step, which is stored as a float
+		float timeStep = eventData[P_TIMESTEP].GetFloat();
+
+		if (mainEditorPlugin_)
+			mainEditorPlugin_->Update(timeStep);
 	}
 
 	void InGameEditor::HandleMenuBarAction(StringHash eventType, VariantMap& eventData)
@@ -240,7 +348,7 @@ namespace Urho3D
 	void InGameEditor::HandleHierarchyListSelectionChange(StringHash eventType, VariantMap& eventData)
 	{
 		ListView* hierarchyList = hierarchyWindow_->GetHierarchyList();
-		const PODVector<UIElement*>& items = hierarchyList->GetItems(); 
+		const PODVector<UIElement*>& items = hierarchyList->GetItems();
 		const PODVector<unsigned>& indices = hierarchyList->GetSelections();
 
 		editorData_->ClearSelection();
@@ -362,8 +470,7 @@ namespace Urho3D
 		else
 			editorData_->SetEditUIElements(editorData_->GetSelectedUIElements());
 
-	//	OnSelectionChange();
-
+		//	OnSelectionChange();
 		// 		PositionGizmo();
 		UpdateAttributeInspector();
 		// 		UpdateCameraPreview();
@@ -418,12 +525,31 @@ namespace Urho3D
 	{
 		if (scene_ != scene)
 		{
-
 			scene_ = scene;
 			hierarchyWindow_->SetScene(scene_);
-		}
-		
+			Renderer* renderer = GetSubsystem<Renderer>();
 
+			if (scene)
+			{
+				backupViewport_ = renderer->GetViewport(0);
+
+				// Set up a viewport to the Renderer subsystem so that the 3D scene can be seen
+				if (viewport_.Null())
+					viewport_ = new Viewport(context_, scene_, camera_);
+				else
+					viewport_->SetScene(scene_);
+
+				renderer->SetViewport(0, viewport_);
+
+			}
+			else
+			{
+				if (backupViewport_)
+				{
+					renderer->SetViewport(0, backupViewport_);
+				}
+			}
+		}
 	}
 
 	void InGameEditor::SetSceneUI(UIElement* sceneUI)
@@ -433,16 +559,13 @@ namespace Urho3D
 
 	void RegisterInGameEditor(Context* context)
 	{
-
-
-
 		ResourcePickerManager::RegisterObject(context);
-		EditorData::RegisterObject( context);
+		EditorData::RegisterObject(context);
 		InGameEditor::RegisterObject(context);
 		MenuBarUI::RegisterObject(context);
 		ToolBarUI::RegisterObject(context);
 		MiniToolBarUI::RegisterObject(context);
+		EditorPlugin::RegisterObject(context);
+		PluginScene3DEditor::RegisterObject(context);
 	}
-
 }
-
