@@ -76,8 +76,9 @@
 #include "../Graphics/Viewport.h"
 
 #include "Galaxy.h"
-
+#include "GalaxyTwo.h"
 #include "../DebugNew.h"
+
 
 
 
@@ -115,6 +116,7 @@ namespace Urho3D
 		engineParameters_["ResourcePaths"] = "Data;CoreData;GameData";
 		
 		Galaxy::RegisterObject(context_);
+		GalaxyTwo::RegisterObject(context_);
 	}
 
 	void Sample::Start()
@@ -222,8 +224,8 @@ namespace Urho3D
 
 		Node* galaxyNode = scene_->CreateChild("Galaxy");
 
-		Galaxy* galaxyComponent = galaxyNode->CreateComponent<Galaxy>();
-
+		GalaxyTwo* galaxyComponent = galaxyNode->CreateComponent<GalaxyTwo>();
+		galaxyComponent->generateGalaxy(200, 4, 40, 20, -1, 23.0f, 45.0f, 0.75f);
 	}
 
 	void Sample::SetupViewport()
