@@ -40,13 +40,24 @@ WIP
 
 WIP
 
-![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/05_HierarchyWindow.png)
+![Sample5](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/05_HierarchyWindow.png)
 
 ###06_InGameEditor
 
 look at InGameEditor class
 
 added: Menu Bar, Tool Bar, InGameEditor Subsystem that can be opend with F3
+
 todo: select, manipulate and edit nodes
 
-![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/06_InGameEditor.png)
+![Sample6](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/06_InGameEditor.png)
+
+###07_NinjaSnowWar
+
+WIP 
+
+look at Game class
+
+note: not everything from the script sample is added ...
+
+![Sample7](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/07_NinjaSnowWar.png)
