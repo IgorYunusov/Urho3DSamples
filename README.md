@@ -24,11 +24,15 @@ note: only NanoGUI::Render is at the moment implented the other functions do not
 
 todo: create an uhro3d rendering context for nanovg
 
+nanovg : https://github.com/memononen/nanovg
+
 ![Sample2](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/02_OpenVGRenderer.png)
 
 ###03_NanoSVGRendering
 
 look at Sample::CreateSVGSprite(const String& file) for the implementation
+
+nanosvg : https://github.com/memononen/nanosvg
 
 ![Sample3](https://raw.githubusercontent.com/scorvi/Urho3DSamples/master/screenshots/03_NanoSVGRendering.png)
 

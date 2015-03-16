@@ -32,7 +32,7 @@ MACRO(SUBDIRLIST result curdir)
 ENDMACRO()
 
 # Set project name
-project (02_OpenVGRenderer)
+project (02_NanoVGRenderer)
 
 
 # Set minimum version
@@ -64,7 +64,7 @@ find_package (Urho3D REQUIRED)
 include_directories (${URHO3D_INCLUDE_DIRS})
 
 # Define target name
-set (TARGET_NAME 02_OpenVGRenderer)
+set (TARGET_NAME 02_NanoVGRenderer)
 
 # Define source files 
 SUBDIRLIST(Urho3DIDE_SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR}/Source)
